@@ -19,10 +19,21 @@ import {
   UserCheck
 } from "lucide-react";
 
+const ROLES = [
+  { id: "dispatcher", label: "Fleet Dispatcher", icon: "🚚", color: "orange" },
+  { id: "manager", label: "Logistics Manager", icon: "📊", color: "blue" },
+  { id: "admin", label: "System Admin", icon: "🛡️", color: "purple" },
+];
+
 const HomePage = () => {
-  // Session variables
-  const userRole = localStorage.getItem("role") || "dispatcher";
+  // Session variables - reactive so role-switcher tabs update the view instantly
+  const [userRole, setUserRole] = useState(localStorage.getItem("role") || "dispatcher");
   const username = localStorage.getItem("username") || "User";
+
+  const handleRoleSwitch = (role) => {
+    localStorage.setItem("role", role);
+    setUserRole(role);
+  };
 
   const [routeData, setRouteData] = useState(null); // Selected vehicle route data
   const [traffic, setTraffic] = useState("Moderate");
@@ -855,10 +866,37 @@ Safe travels!`;
         {/* Main Workspace Frame */}
         <div className={`flex-1 transition-all duration-300 ${userRole === "dispatcher" && sidebarOpen ? "pl-64" : "pl-0"} flex flex-col lg:flex-row max-w-[1650px] mx-auto p-4 gap-4 w-full animate-fade-in`}>
           
+          {/* ===== ROLE SWITCHER TAB BAR ===== */}
+          <div className="w-full mb-2">
+            <div className="flex items-center gap-1 bg-gray-900/70 border border-gray-800 rounded-2xl p-1.5 w-fit mx-auto">
+              <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider px-2 hidden sm:block">View As:</span>
+              {ROLES.map((r) => {
+                const isActive = userRole === r.id;
+                const colorMap = {
+                  orange: isActive ? "bg-orange-500 text-white shadow-lg shadow-orange-500/20" : "text-gray-400 hover:text-orange-400 hover:bg-orange-950/30",
+                  blue: isActive ? "bg-blue-600 text-white shadow-lg shadow-blue-500/20" : "text-gray-400 hover:text-blue-400 hover:bg-blue-950/30",
+                  purple: isActive ? "bg-purple-600 text-white shadow-lg shadow-purple-500/20" : "text-gray-400 hover:text-purple-400 hover:bg-purple-950/30",
+                };
+                return (
+                  <button
+                    key={r.id}
+                    onClick={() => handleRoleSwitch(r.id)}
+                    className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${colorMap[r.color]}`}
+                  >
+                    <span>{r.icon}</span>
+                    <span className="hidden sm:inline">{r.label}</span>
+                    <span className="sm:hidden">{r.id === "dispatcher" ? "Dispatch" : r.id === "manager" ? "Manager" : "Admin"}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
           {/* Switch rendering based on active user role */}
           {userRole === "dispatcher" && renderDispatcherDashboard()}
           {userRole === "manager" && renderManagerDashboard()}
           {userRole === "admin" && renderAdminDashboard()}
+
 
           {/* RIGHT FLOATING COLUMN: AI Chat Dispatcher Console (Only for Dispatcher) */}
           {userRole === "dispatcher" && (
