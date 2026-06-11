@@ -1,0 +1,16 @@
+# Node / React
+client/node_modules/
+client/dist/
+
+# Python / FastAPI
+server/__pycache__/
+server/*.pyc
+server/*.db
+server/smartroute.db
+.venv/
+.env
+
+# IDE / System
+.vscode/
+.DS_Store
+Thumbs.db
