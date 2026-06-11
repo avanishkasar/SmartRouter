@@ -27,6 +27,7 @@ const HomePage = () => {
   const [routeData, setRouteData] = useState(null); // Selected vehicle route data
   const [traffic, setTraffic] = useState("Moderate");
   const [weather, setWeather] = useState("Clear: clear sky");
+  const [intermodal, setIntermodal] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   
   // Dispatcher chat console state
@@ -75,8 +76,8 @@ const HomePage = () => {
   }, []);
 
   // Recalculation logic
-  const handleRecalculate = async (selectedTraffic = traffic, selectedWeather = weather) => {
-    addLog(`⚡ Synthetic noise changed. Traffic: '${selectedTraffic}', Weather: '${selectedWeather}'.`);
+  const handleRecalculate = async (selectedTraffic = traffic, selectedWeather = weather, selectedIntermodal = intermodal) => {
+    addLog(`⚡ Synthetic noise changed. Traffic: '${selectedTraffic}', Weather: '${selectedWeather}', Intermodal: ${selectedIntermodal}.`);
     addLog(`🧠 Re-evaluating routes through ML prediction scaler...`);
     try {
       const res = await fetch(`${API_BASE_URL}/recalculate`, {
@@ -84,7 +85,8 @@ const HomePage = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           traffic_level: selectedTraffic,
-          weather_condition: selectedWeather
+          weather_condition: selectedWeather,
+          intermodal: selectedIntermodal
         })
       });
       if (res.ok) {
@@ -100,7 +102,7 @@ const HomePage = () => {
 
   const fetchVehicleRoute = async (vehicleId) => {
     try {
-      const response = await fetch(`http://127.0.0.1:8000/route/${vehicleId}`);
+      const response = await fetch(`${API_BASE_URL}/route/${vehicleId}`);
       if (response.ok) {
         const route = await response.json();
         setRouteData(route);
@@ -225,7 +227,7 @@ Safe travels!`;
   const handleManualAssignment = async (orderId, vehicleId) => {
     try {
       const vId = vehicleId === "" ? null : parseInt(vehicleId);
-      await axios.put(`http://127.0.0.1:8000/orders/${orderId}/assign`, {
+      await axios.put(`${API_BASE_URL}/orders/${orderId}/assign`, {
         vehicle_id: vId
       });
       alert(`Order #${orderId} allocation updated successfully!`);
@@ -270,7 +272,7 @@ Safe travels!`;
 
   const handleUserRoleUpdate = async (userId, newRole) => {
     try {
-      await axios.put(`http://127.0.0.1:8000/auth/users/${userId}/role`, {
+      await axios.put(`${API_BASE_URL}/auth/users/${userId}/role`, {
         role: newRole
       });
       alert("User role updated successfully!");
@@ -284,7 +286,7 @@ Safe travels!`;
   const handleUserDelete = async (userId) => {
     if (!window.confirm("Are you sure you want to delete this user account?")) return;
     try {
-      await axios.delete(`http://127.0.0.1:8000/auth/users/${userId}`);
+      await axios.delete(`${API_BASE_URL}/auth/users/${userId}`);
       alert("User account deleted.");
       setAdminRefreshTrigger(prev => prev + 1);
     } catch (err) {
@@ -333,7 +335,7 @@ Safe travels!`;
                 value={traffic} 
                 onChange={(e) => {
                   setTraffic(e.target.value);
-                  handleRecalculate(e.target.value, weather);
+                  handleRecalculate(e.target.value, weather, intermodal);
                 }}
                 className="w-full bg-gray-900 border border-gray-800 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all cursor-pointer"
               >
@@ -350,7 +352,7 @@ Safe travels!`;
                 value={weather} 
                 onChange={(e) => {
                   setWeather(e.target.value);
-                  handleRecalculate(traffic, e.target.value);
+                  handleRecalculate(traffic, e.target.value, intermodal);
                 }}
                 className="w-full bg-gray-900 border border-gray-800 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all cursor-pointer"
               >
@@ -361,6 +363,23 @@ Safe travels!`;
                 <option value="Thunderstorm: heavy thunderstorm">Severe Thunderstorm (1.6x Delay)</option>
                 <option value="Tornado: tornado">Extreme Storm / Tornado (2.0x Delay)</option>
               </select>
+            </div>
+
+            <div className="flex items-center gap-2 pt-2">
+              <input
+                id="intermodal-toggle"
+                type="checkbox"
+                checked={intermodal}
+                onChange={(e) => {
+                  const val = e.target.checked;
+                  setIntermodal(val);
+                  handleRecalculate(traffic, weather, val);
+                }}
+                className="w-4 h-4 text-orange-500 bg-gray-900 border-gray-800 rounded focus:ring-orange-500 focus:ring-2 cursor-pointer"
+              />
+              <label htmlFor="intermodal-toggle" className="text-xs font-semibold text-gray-300 cursor-pointer select-none">
+                🚄 Enable PM Gati Shakti Intermodal Transit
+              </label>
             </div>
           </div>
         </div>

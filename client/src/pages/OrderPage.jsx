@@ -29,7 +29,7 @@ const OrderPage = () => {
     }
 
     try {
-      await axios.delete(`http://127.0.0.1:8000/orders/${orderId}`);
+      await axios.delete(`${API_BASE_URL}/orders/${orderId}`);
       alert("Order deleted successfully!");
       fetchOrders();
     } catch (err) {

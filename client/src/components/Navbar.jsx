@@ -6,7 +6,8 @@ import logo from "../assets/logo5.png";
 const navItems = [
   { label: "Dashboard", href: "/dashboard" },
   { label: "Orders Board", href: "/order" },
-  { label: "Fleet Vehicles", href: "/vehicles" }
+  { label: "Fleet Vehicles", href: "/vehicles" },
+  { label: "Driver Console", href: "/driver" }
 ];
 
 const Navbar = () => {

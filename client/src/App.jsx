@@ -6,6 +6,7 @@ import VehiclesPage from './pages/VehiclesPage';
 import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
 import SignUpPage from './pages/SignUpPage';
+import DriverPage from './pages/DriverPage';
 
 // Simple Route Guard for authenticated dispatch views
 const ProtectedRoute = ({ children }) => {
@@ -24,6 +25,7 @@ function App() {
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignUpPage />} />
+        <Route path="/driver" element={<DriverPage />} />
 
         {/* Protected Console Views */}
         <Route path="/dashboard" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />

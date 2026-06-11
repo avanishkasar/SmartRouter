@@ -67,7 +67,7 @@ const GoogleMapComponent = ({ routeData }) => {
     try {
       const fetchedOrders = await Promise.all(
         orderIds.map(async (id) => {
-          const response = await fetch(`http://127.0.0.1:8000/orders/${id}`);
+          const response = await fetch(`${API_BASE_URL}/orders/${id}`);
           return response.json();
         })
       );
@@ -135,6 +135,47 @@ const GoogleMapComponent = ({ routeData }) => {
       map.fitBounds(polyline.getBounds(), { padding: [30, 30] });
     } else {
       map.setView(warehouseCoordinates, 13);
+    }
+
+    // Draw rail segments if present
+    if (routeData?.rail_segments && routeData.rail_segments.length > 0) {
+      routeData.rail_segments.forEach((segment) => {
+        const coords = segment.map(pt => [pt.lat, pt.lng]);
+        const railPolyline = L.polyline(coords, {
+          color: "#FFD700", // Gold color for railways
+          weight: 5,
+          dashArray: "8, 8", // Dashed lines
+          opacity: 0.9
+        }).addTo(map);
+        layerGroup.addLayer(railPolyline);
+      });
+      
+      // Add custom train yard markers for Gati Shakti hubs
+      const RailYardIcon = L.icon({
+        iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-gold.png",
+        shadowUrl: markerShadow,
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        shadowSize: [41, 41]
+      });
+
+      const yards = [
+        { name: "Kurla Yard", coords: [19.0667, 72.8833] },
+        { name: "Kalyan Yard", coords: [19.2372, 73.1256] },
+        { name: "JNPT Port", coords: [18.9501, 72.9469] }
+      ];
+
+      yards.forEach(yard => {
+        const yardMarker = L.marker(yard.coords, { icon: RailYardIcon })
+          .bindPopup(`
+            <div style="color: #1f2937; font-family: sans-serif;">
+              <h3 style="margin: 0; font-weight: bold; font-size: 14px; color: #b7791f;">🚄 PM Gati Shakti Yard</h3>
+              <p style="margin: 4px 0 0 0; font-size: 12px; color: #4b5563;">${yard.name} Freight Hub</p>
+            </div>
+          `);
+        layerGroup.addLayer(yardMarker);
+      });
     }
   }, [routeData, orders]);
 

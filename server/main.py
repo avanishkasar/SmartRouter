@@ -309,13 +309,22 @@ def get_route_by_vehicle(vehicle_id: int, db: Session = Depends(get_db)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error parsing full_route: {str(e)}")
     
+    # Parse `rail_segments` if present
+    formatted_rail_segments = []
+    if hasattr(route, "rail_segments") and route.rail_segments:
+        try:
+            formatted_rail_segments = eval(route.rail_segments)
+        except Exception:
+            formatted_rail_segments = []
+            
     return {
         "route_id": route.id,
         "assigned_orders": ast.literal_eval(route.assigned_orders),
         "route": route.route,
         "full_route": formatted_full_route,
         "vehicle_id": route.vehicle_id,
-        "route_distance": route.route_distance
+        "route_distance": route.route_distance,
+        "rail_segments": formatted_rail_segments
     }
 
 
@@ -367,6 +376,7 @@ import re
 class RecalculateRequest(BaseModel):
     traffic_level: Optional[str] = None
     weather_condition: Optional[str] = None
+    intermodal: Optional[bool] = False
 
 @app.post("/recalculate")
 def recalculate_routes(req: RecalculateRequest, db: Session = Depends(get_db)):
@@ -390,7 +400,8 @@ def recalculate_routes(req: RecalculateRequest, db: Session = Depends(get_db)):
         manager = OrderManager(
             db, 
             override_traffic=req.traffic_level, 
-            override_weather=req.weather_condition
+            override_weather=req.weather_condition,
+            intermodal=req.intermodal or False
         )
         manager.assign_orders()
         return {"status": "success", "message": "Routes successfully recalculated!"}
@@ -527,7 +538,150 @@ def chat_dispatch(req: ChatRequest, db: Session = Depends(get_db)):
             "status": "success"
         }
 
-    # 5. Default Fallback Chat Response
+    # 5. Overloaded check
+    if "overloaded" in msg or "capacity limit" in msg:
+        vehicles = db.query(Vehicle).all()
+        overloaded = []
+        for v in vehicles:
+            used = sum(o.weight for o in v.assigned_orders)
+            if used > v.capacity:
+                overloaded.append(f"Vehicle #{v.id} (Load: {used} kg / Max: {v.capacity} kg)")
+        if overloaded:
+            return {
+                "response": "🤖 **AI Dispatcher Console**:\n\n⚠️ **Alert**: The following trucks are overloaded:\n" + "\n".join(f"- {item}" for item in overloaded) + "\n\nPlease recalculate or manually reassign orders.",
+                "status": "warning"
+            }
+        return {
+            "response": "🤖 **AI Dispatcher Console**:\n\n✅ **System Check**: All active vehicles are within their legal load capacities. No overloaded trucks detected.",
+            "status": "success"
+        }
+
+    # 6. Evacuate / Monsoon affected orders
+    if "evacuate" in msg or "monsoon" in msg or "breakdown" in msg or "disruption" in msg:
+        try:
+            active_routes = db.query(Route).all()
+            if not active_routes:
+                return {
+                    "response": "🤖 **AI Dispatcher Console**:\n\n⚠️ **Disruption Check**: No active routes found to evacuate. Please add orders/vehicles first.",
+                    "status": "error"
+                }
+            disrupted_route = active_routes[0]
+            vehicle_id = disrupted_route.vehicle_id
+            orders = db.query(Order).filter(Order.vehicle_id == vehicle_id).all()
+            order_names = [o.name for o in orders]
+            
+            for o in orders:
+                o.vehicle_id = None
+                o.status = "pending"
+                o.route_id = None
+            db.commit()
+            
+            db.query(Route).filter(Route.vehicle_id == vehicle_id).delete()
+            db.commit()
+            
+            vehicle = db.query(Vehicle).filter(Vehicle.id == vehicle_id).first()
+            old_capacity = vehicle.capacity
+            vehicle.capacity = 0.0
+            db.commit()
+            
+            manager = OrderManager(db)
+            manager.assign_orders()
+            
+            vehicle.capacity = old_capacity
+            db.commit()
+            
+            logs = [
+                f"🚨 [TelemetryAgent]: Engine cooling/monsoon risk on Vehicle #{vehicle_id}.",
+                f"📦 [InventoryAgent]: Evacuated stranded orders: {', '.join(order_names)}.",
+                f"🚚 [RoutingAgent]: Stranded orders successfully reallocated to other active trucks."
+            ]
+            return {
+                "response": f"🤖 **AI Dispatcher Console**:\n\n⛈️ **Monsoon/Disruption Evacuation Triggered!**\n- **Evacuated Truck**: Vehicle #{vehicle_id}\n- **Stranded Orders**: {', '.join(order_names)}\n\n" + "\n".join(logs) + "\n\n✅ Recovery completed. All orders reallocated to safe routes.",
+                "status": "success"
+            }
+        except Exception as e:
+            return {
+                "response": f"🤖 **AI Dispatcher Console**:\n\n⚠️ Error during evacuation recovery: {str(e)}",
+                "status": "error"
+            }
+
+    # 7. System Diagnostics
+    if any(k in msg for k in ["fuel", "diagnostics", "health", "system", "status", "statistics", "stats"]):
+        total_orders = db.query(Order).count()
+        pending_orders = db.query(Order).filter(Order.status == "pending").count()
+        total_vehicles = db.query(Vehicle).count()
+        routes = db.query(Route).all()
+        total_distance = sum(r.route_distance for r in routes)
+        
+        avg_fuel = total_distance * 0.15
+        avg_co2 = avg_fuel * 2.68
+        
+        vehicles = db.query(Vehicle).all()
+        vehicle_space_str = []
+        most_free_space_vehicle = None
+        max_free_space = -1
+        for v in vehicles:
+            used = sum(o.weight for o in v.assigned_orders)
+            free = v.capacity - used
+            vehicle_space_str.append(f"Vehicle #{v.id}: {free:.1f} kg free (Capacity: {v.capacity} kg)")
+            if free > max_free_space:
+                max_free_space = free
+                most_free_space_vehicle = v.id
+                
+        most_free_msg = f"Vehicle #{most_free_space_vehicle} has the most free space ({max_free_space:.1f} kg)." if most_free_space_vehicle else "No vehicles registered."
+
+        return {
+            "response": (
+                f"🤖 **AI Dispatcher Console - System Diagnostics**:\n\n"
+                f"📊 **Logistics Metrics**:\n"
+                f"- **Total Distance**: {total_distance:.2f} km\n"
+                f"- **Estimated Fuel Consumption**: {avg_fuel:.2f} Liters (Avg: 0.15 L/km)\n"
+                f"- **Carbon Footprint**: {avg_co2:.2f} kg CO₂\n"
+                f"- **Total Registered Orders**: {total_orders} ({pending_orders} pending)\n"
+                f"- **Total Fleet Vehicles**: {total_vehicles}\n\n"
+                f"🚚 **Fleet Capacity & Free Space**:\n" + "\n".join(f"- {item}" for item in vehicle_space_str) + f"\n\n💡 *Hint: {most_free_msg}*"
+            ),
+            "status": "success"
+        }
+
+    # 8. Intermodal routing command
+    if any(k in msg for k in ["intermodal", "rail", "gati shakti", "kalyan", "kurla", "jnpt"]):
+        try:
+            db.query(Order).update({Order.route_id: None})
+            db.commit()
+            db.query(Route).delete()
+            db.commit()
+            for order in db.query(Order).all():
+                order.status = "pending"
+                order.vehicle_id = None
+                order.route_id = None
+                order.delivery_distance = None
+                order.estimate_delivery_time = None
+            db.commit()
+            
+            manager = OrderManager(db, intermodal=True)
+            manager.assign_orders()
+            
+            routes_with_rail = db.query(Route).filter(Route.rail_segments.isnot(None), Route.rail_segments != "[]").count()
+            
+            return {
+                "response": (
+                    f"🤖 **AI Dispatcher Console**:\n\n"
+                    f"🚄 **PM Gati Shakti Intermodal Transit Enabled!**\n"
+                    f"- **Action**: Re-routed heavy cargo (>20 kg) to railway junctions.\n"
+                    f"- **Train Routes Formed**: {routes_with_rail} routes optimized with rail transit segments.\n"
+                    f"- **Efficiency gains**: Cost reduced by ~40%, Carbon emissions slashed by ~60% on rail legs.\n\n"
+                    f"The map has been updated with rail connections (gold dashed lines) and freight junctions!"
+                ),
+                "status": "success"
+            }
+        except Exception as e:
+            return {
+                "response": f"🤖 **AI Dispatcher Console**:\n\n⚠️ Error during intermodal routing: {str(e)}",
+                "status": "error"
+            }
+
+    # 9. Default Fallback Chat Response
     return {
         "response": (
             "🤖 **AI Dispatcher Console**:\n\n"
@@ -799,6 +953,86 @@ def simulate_disruption(db: Session = Depends(get_db)):
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=str(e))
+
+
+class StatusUpdateRequest(BaseModel):
+    status: str
+
+@app.post("/orders/{order_id}/status")
+def update_order_status(order_id: int, req: StatusUpdateRequest, db: Session = Depends(get_db)):
+    order = db.query(Order).filter(Order.id == order_id).first()
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+    if req.status not in ["pending", "in-process", "in-transit", "delivered"]:
+        raise HTTPException(status_code=400, detail="Invalid status")
+    order.status = req.status
+    db.commit()
+    return {"status": "success", "message": f"Order #{order_id} status updated to {req.status}"}
+
+@app.get("/driver/vehicle/{vehicle_id}")
+def get_driver_route(vehicle_id: int, db: Session = Depends(get_db)):
+    # Find orders for this vehicle
+    orders = db.query(Order).filter(Order.vehicle_id == vehicle_id).all()
+    if not orders:
+        raise HTTPException(status_code=404, detail="No assigned orders found for this vehicle")
+        
+    route = db.query(Route).filter(Route.vehicle_id == vehicle_id).first()
+    if not route:
+        # Try finding via order route_id
+        route_id = orders[0].route_id
+        route = db.query(Route).filter(Route.id == route_id).first()
+        
+    if not route:
+        raise HTTPException(status_code=404, detail="No route found for this vehicle")
+        
+    try:
+        sequence = ast.literal_eval(route.route)
+    except Exception:
+        sequence = []
+        
+    ordered_orders = []
+    order_dict = {o.id: o for o in orders}
+    try:
+        assigned_ids = ast.literal_eval(route.assigned_orders)
+        for oid in assigned_ids:
+            if oid in order_dict:
+                ordered_orders.append(order_dict[oid])
+    except Exception:
+        ordered_orders = orders
+
+    try:
+        parsed_full_route = eval(route.full_route)
+        formatted_full_route = [{"lat": float(lat), "lng": float(lng)} for lat, lng in parsed_full_route]
+    except Exception:
+        formatted_full_route = []
+        
+    formatted_rail_segments = []
+    if hasattr(route, "rail_segments") and route.rail_segments:
+        try:
+            formatted_rail_segments = eval(route.rail_segments)
+        except Exception:
+            formatted_rail_segments = []
+
+    return {
+        "route_id": route.id,
+        "full_route": formatted_full_route,
+        "rail_segments": formatted_rail_segments,
+        "route_distance": route.route_distance,
+        "orders": [
+            {
+                "id": o.id,
+                "name": o.name,
+                "priority": o.priority,
+                "weight": o.weight,
+                "delivery_coordinates": o.delivery_coordinates,
+                "status": o.status,
+                "delivery_distance": o.delivery_distance,
+                "estimate_delivery_time": o.estimate_delivery_time
+            }
+            for o in ordered_orders
+        ]
+    }
+
 
 
 

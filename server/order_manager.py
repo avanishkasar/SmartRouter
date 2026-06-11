@@ -48,10 +48,11 @@ weather_factor = {
 
 
 class OrderManager:
-    def __init__(self, db: Session, override_traffic: str = None, override_weather: str = None):
+    def __init__(self, db: Session, override_traffic: str = None, override_weather: str = None, intermodal: bool = False):
         self.db = db
         self.override_traffic = override_traffic
         self.override_weather = override_weather
+        self.intermodal = intermodal
         # Load ML Model and Preprocessing Components
         with open("ml_models/delivery_time_model (2).pkl", "rb") as f:
             self.model = joblib.load(f)
@@ -217,15 +218,19 @@ class OrderManager:
             delivery_locations = []
             order_map = {}  # Maps delivery index → order object
 
+            weights = []
             for idx, order in enumerate(vehicle_orders):
                 coords = tuple(map(float, order.delivery_coordinates.split(",")))
                 delivery_locations.append(coords)
+                weights.append(order.weight)
                 order_map[idx] = order  # Map index to order object
 
             # Compute optimized route and distances
-            full_route, optimized_order_indexes, distance = optimal_route(delivery_locations)
+            full_route, optimized_order_indexes, distance, rail_segments = optimal_route(
+                delivery_locations, weights=weights, intermodal=self.intermodal
+            )
             print("------------------------------")
-            print(full_route, optimized_order_indexes, distance)
+            print(full_route, optimized_order_indexes, distance, rail_segments)
             print("------------------------------")
 
             if not isinstance(optimized_order_indexes, list):
@@ -297,7 +302,8 @@ class OrderManager:
                 assigned_orders=str([o.id for o in assigned_orders_as_per_route]), 
                 route=str(optimized_order_indexes),
                 route_distance = distance[-1],
-                full_route=str(full_route)
+                full_route=str(full_route),
+                rail_segments=str(rail_segments)
             )
             self.db.add(route)
             self.db.commit()

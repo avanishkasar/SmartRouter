@@ -51,6 +51,7 @@ class Route(Base):
     full_route = Column(String, nullable=False)  # JSON or comma-separated list of all coordinates
     route_distance = Column(Float, nullable=False)
     vehicle_id = Column(Integer, ForeignKey("vehicles.id"), nullable=True)
+    rail_segments = Column(String, nullable=True)
     
     def __repr__(self):
         return f"Route(id={self.id}, vehicle_id={self.vehicle_id})"

@@ -23,7 +23,7 @@ const VehiclesPage = () => {
       await Promise.all(
         vehiclesList.map(async (v) => {
           try {
-            const rRes = await axios.get(`http://127.0.0.1:8000/route/${v.id}`);
+            const rRes = await axios.get(`${API_BASE_URL}/route/${v.id}`);
             if (rRes.status === 200) {
               routesObj[v.id] = rRes.data;
             }
@@ -48,7 +48,7 @@ const VehiclesPage = () => {
     }
 
     try {
-      await axios.delete(`http://127.0.0.1:8000/vehicles/${vehicleId}`);
+      await axios.delete(`${API_BASE_URL}/vehicles/${vehicleId}`);
       alert("Vehicle successfully decommissioned!");
       fetchVehiclesAndRoutes();
     } catch (err) {
