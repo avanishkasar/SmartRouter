@@ -22,42 +22,6 @@ from fastapi import Security
 
 Base.metadata.create_all(bind=engine)
 
-# Create database session and seed initial data if empty
-db = SessionLocal()
-try:
-    if db.query(Vehicle).count() == 0:
-        print("Seeding initial vehicles...")
-        vehicles = [
-            Vehicle(capacity=50.0),
-            Vehicle(capacity=80.0),
-            Vehicle(capacity=100.0)
-        ]
-        db.add_all(vehicles)
-        db.commit()
-        
-    if db.query(Order).count() == 0:
-        print("Seeding initial orders...")
-        orders = [
-            Order(name="Order A", priority=1, weight=10.0, delivery_coordinates="19.125914,72.857195", order_datetime=datetime.now(), status="pending"),
-            Order(name="Order B", priority=2, weight=15.0, delivery_coordinates="19.110758,72.868224", order_datetime=datetime.now(), status="pending"),
-            Order(name="Order C", priority=1, weight=5.0, delivery_coordinates="19.102111,72.886025", order_datetime=datetime.now(), status="pending"),
-            Order(name="Order D", priority=3, weight=25.0, delivery_coordinates="19.100309,72.903522", order_datetime=datetime.now(), status="pending"),
-        ]
-        db.add_all(orders)
-        db.commit()
-        
-        # Trigger routing logic once initial orders are seeded
-        try:
-            manager = OrderManager(db)
-            manager.assign_orders()
-            print("Successfully assigned and routed initial orders!")
-        except Exception as e:
-            print(f"Error assigning initial orders: {e}")
-except Exception as e:
-    print(f"Error seeding database: {e}")
-finally:
-    db.close()
-
 
 # Initialize the FastAPI app
 app = FastAPI()
@@ -98,6 +62,53 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
         return bcrypt.checkpw(plain_password.encode("utf-8"), hashed_password.encode("utf-8"))
     except Exception:
         return False
+
+
+# Create database session and seed initial data if empty
+db = SessionLocal()
+try:
+    if db.query(Vehicle).count() == 0:
+        print("Seeding initial vehicles...")
+        vehicles = [
+            Vehicle(capacity=50.0),
+            Vehicle(capacity=80.0),
+            Vehicle(capacity=100.0)
+        ]
+        db.add_all(vehicles)
+        db.commit()
+
+    if db.query(User).count() == 0:
+        print("Seeding initial users...")
+        users = [
+            User(username="dispatcher", hashed_password=hash_password("password123"), role="dispatcher"),
+            User(username="manager", hashed_password=hash_password("password123"), role="manager"),
+            User(username="admin", hashed_password=hash_password("password123"), role="admin"),
+        ]
+        db.add_all(users)
+        db.commit()
+        
+    if db.query(Order).count() == 0:
+        print("Seeding initial orders...")
+        orders = [
+            Order(name="Order A", priority=1, weight=10.0, delivery_coordinates="19.125914,72.857195", order_datetime=datetime.now(), status="pending"),
+            Order(name="Order B", priority=2, weight=15.0, delivery_coordinates="19.110758,72.868224", order_datetime=datetime.now(), status="pending"),
+            Order(name="Order C", priority=1, weight=5.0, delivery_coordinates="19.102111,72.886025", order_datetime=datetime.now(), status="pending"),
+            Order(name="Order D", priority=3, weight=25.0, delivery_coordinates="19.100309,72.903522", order_datetime=datetime.now(), status="pending"),
+        ]
+        db.add_all(orders)
+        db.commit()
+        
+        # Trigger routing logic once initial orders are seeded
+        try:
+            manager = OrderManager(db)
+            manager.assign_orders()
+            print("Successfully assigned and routed initial orders!")
+        except Exception as e:
+            print(f"Error assigning initial orders: {e}")
+except Exception as e:
+    print(f"Error seeding database: {e}")
+finally:
+    db.close()
 
 def get_current_user(credentials: HTTPAuthorizationCredentials = Security(security), db: Session = Depends(get_db)):
     token = credentials.credentials

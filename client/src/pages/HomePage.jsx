@@ -853,7 +853,7 @@ Safe travels!`;
         )}
         
         {/* Main Workspace Frame */}
-        <div className={`flex-1 transition-all duration-300 ${userRole === "dispatcher" && sidebarOpen ? "pl-64" : "pl-0"} flex flex-col lg:flex-row max-w-[1650px] mx-auto p-4 gap-4 w-full`}>
+        <div className={`flex-1 transition-all duration-300 ${userRole === "dispatcher" && sidebarOpen ? "pl-64" : "pl-0"} flex flex-col lg:flex-row max-w-[1650px] mx-auto p-4 gap-4 w-full animate-fade-in`}>
           
           {/* Switch rendering based on active user role */}
           {userRole === "dispatcher" && renderDispatcherDashboard()}
