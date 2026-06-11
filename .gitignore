@@ -1,6 +1,6 @@
 # Node / React
 client/node_modules/
-client/dist/
+
 
 # Python / FastAPI
 server/__pycache__/

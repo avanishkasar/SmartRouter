@@ -1,4 +1,7 @@
 from fastapi import FastAPI, HTTPException, Depends
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+import os
 from sqlalchemy.orm import Session
 from typing import List
 from database import SessionLocal, engine
@@ -1032,6 +1035,18 @@ def get_driver_route(vehicle_id: int, db: Session = Depends(get_db)):
             for o in ordered_orders
         ]
     }
+
+
+# Serve React Frontend Static Files (from client/dist)
+frontend_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../client/dist"))
+if os.path.exists(frontend_dir):
+    app.mount("/assets", StaticFiles(directory=os.path.join(frontend_dir, "assets")), name="assets")
+
+    @app.get("/{catchall:path}")
+    def serve_frontend(catchall: str):
+        # Serve index.html for all frontend SPA routing paths
+        return FileResponse(os.path.join(frontend_dir, "index.html"))
+
 
 
 
