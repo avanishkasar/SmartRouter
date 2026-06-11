@@ -1037,8 +1037,8 @@ def get_driver_route(vehicle_id: int, db: Session = Depends(get_db)):
     }
 
 
-# Serve React Frontend Static Files (from client/dist)
-frontend_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../client/dist"))
+# Serve React Frontend Static Files (from server/dist)
+frontend_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "dist"))
 if os.path.exists(frontend_dir):
     app.mount("/assets", StaticFiles(directory=os.path.join(frontend_dir, "assets")), name="assets")
 
