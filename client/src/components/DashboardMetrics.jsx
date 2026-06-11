@@ -1,6 +1,25 @@
 import { API_BASE_URL } from '../config';
 import { useEffect, useState } from "react";
 
+const MetricCard = ({ label, value, unit, colorClass, accent = false, delay = 0 }) => (
+  <div
+    className={`p-4 rounded-xl text-center interactive-card animate-fade-in-up ${
+      accent
+        ? colorClass
+        : "glass-panel border border-gray-800/60"
+    }`}
+    style={{ animationDelay: `${delay}ms` }}
+  >
+    <h2 className={`text-[10px] font-bold uppercase tracking-wide ${accent ? "" : "text-gray-400"}`}>
+      {label}
+    </h2>
+    <p className={`text-2xl font-extrabold mt-2 animate-number-pop ${colorClass}`}>
+      {value}
+      {unit && <span className="text-xs font-medium ml-1 opacity-60">{unit}</span>}
+    </p>
+  </div>
+);
+
 const DashboardMetrics = ({ 
   routeData, 
   isManager = false,
@@ -35,64 +54,47 @@ const DashboardMetrics = ({
 
   const cost_perKM = fuelPrice / fuelEfficiency;
   
-  // Choose between selected route metrics (dispatcher) and aggregated fleet metrics (manager)
   const distanceVal = isManager ? stats.total_distance : (routeData?.route_distance ?? 0);
   const fuelCost = (distanceVal * cost_perKM).toFixed(2);
   
-  // Calculate Savings compared to unoptimized routing (35% worse path)
   const distSaved = distanceVal * 0.35;
   const costSaved = (distSaved * cost_perKM).toFixed(2);
   const co2Saved = (distSaved * co2Factor).toFixed(2);
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4 p-4">
-      <div className="p-4 glass-panel glass-panel-hover rounded-xl text-center">
-        <h2 className="text-xs font-bold text-gray-400 uppercase tracking-wide">Total Orders</h2>
-        <p className="text-white text-3xl font-extrabold mt-2">{stats.total_orders}</p>
-      </div>
-
-      <div className="p-4 glass-panel glass-panel-hover rounded-xl text-center">
-        <h2 className="text-xs font-bold text-gray-400 uppercase tracking-wide">Pending Orders</h2>
-        <p className="text-orange-500 text-3xl font-extrabold mt-2">{stats.pending_orders}</p>
-      </div>
-
-      <div className="p-4 glass-panel glass-panel-hover rounded-xl text-center">
-        <h2 className="text-xs font-bold text-gray-400 uppercase tracking-wide">Total Vehicles</h2>
-        <p className="text-white text-3xl font-extrabold mt-2">{stats.total_vehicles}</p>
-      </div>
-
-      <div className="p-4 glass-panel glass-panel-hover rounded-xl text-center">
-        <h2 className="text-xs font-bold text-gray-400 uppercase tracking-wide">Active Vehicles</h2>
-        <p className="text-blue-400 text-3xl font-extrabold mt-2">{stats.vehicles_with_in_process_orders}</p>
-      </div>
-
-      <div className="p-4 glass-panel glass-panel-hover rounded-xl text-center">
-        <h2 className="text-xs font-bold text-gray-400 uppercase tracking-wide">
-          {isManager ? "Total Fleet Dist" : "Route Distance"}
-        </h2>
-        <p className="text-white text-3xl font-extrabold mt-2">
-          {distanceVal > 0 ? `${distanceVal.toFixed(1)}` : "N/A"} <span className="text-sm font-medium text-gray-500">Km</span>
-        </p>
-      </div>
-
-      <div className="p-4 glass-panel glass-panel-hover rounded-xl text-center">
-        <h2 className="text-xs font-bold text-gray-400 uppercase tracking-wide">
-          {isManager ? "Total Fuel Cost" : "Est. Fuel Cost"}
-        </h2>
-        <p className="text-white text-3xl font-extrabold mt-2">₹{distanceVal > 0 ? fuelCost : "0.00"}</p>
-      </div>
-
-      <div className="p-4 bg-emerald-950/30 backdrop-blur-md rounded-xl text-center border border-emerald-800/40 glow-emerald transition-all duration-300 hover:scale-[1.03]">
-        <h2 className="text-xs font-bold text-emerald-400 uppercase tracking-wide">Fuel Saved</h2>
-        <p className="text-emerald-300 text-3xl font-extrabold mt-2">₹{distanceVal > 0 ? costSaved : "0.00"}</p>
-      </div>
-
-      <div className="p-4 bg-teal-950/30 backdrop-blur-md rounded-xl text-center border border-teal-800/40 glow-emerald transition-all duration-300 hover:scale-[1.03]">
-        <h2 className="text-xs font-bold text-teal-400 uppercase tracking-wide">CO₂ Saved</h2>
-        <p className="text-teal-300 text-3xl font-extrabold mt-2">
-          {distanceVal > 0 ? co2Saved : "0.00"} <span className="text-sm font-medium">kg</span>
-        </p>
-      </div>
+    <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3 px-1 py-2">
+      <MetricCard label="Total Orders" value={stats.total_orders} colorClass="text-white" delay={0} />
+      <MetricCard label="Pending Orders" value={stats.pending_orders} colorClass="text-orange-400" delay={50} />
+      <MetricCard label="Total Vehicles" value={stats.total_vehicles} colorClass="text-white" delay={100} />
+      <MetricCard label="Active Vehicles" value={stats.vehicles_with_in_process_orders} colorClass="text-blue-400" delay={150} />
+      <MetricCard
+        label={isManager ? "Total Fleet Dist" : "Route Distance"}
+        value={distanceVal > 0 ? distanceVal.toFixed(1) : "N/A"}
+        unit={distanceVal > 0 ? "Km" : ""}
+        colorClass="text-white"
+        delay={200}
+      />
+      <MetricCard
+        label={isManager ? "Total Fuel Cost" : "Est. Fuel Cost"}
+        value={`₹${distanceVal > 0 ? fuelCost : "0.00"}`}
+        colorClass="text-white"
+        delay={250}
+      />
+      <MetricCard
+        label="Fuel Saved"
+        value={`₹${distanceVal > 0 ? costSaved : "0.00"}`}
+        colorClass="text-emerald-300"
+        accent={true}
+        delay={300}
+      />
+      <MetricCard
+        label="CO₂ Saved"
+        value={distanceVal > 0 ? co2Saved : "0.00"}
+        unit="kg"
+        colorClass="text-teal-300"
+        accent={true}
+        delay={350}
+      />
     </div>
   );
 };

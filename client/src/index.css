@@ -88,7 +88,9 @@ body {
   animation-delay: 150ms;
 }
 
-/* Elegant Animation Keyframes & Classes */
+/* ===== ELEGANT ANIMATIONS ===== */
+
+/* Main fade-in with slight upward motion */
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -104,6 +106,31 @@ body {
   animation: fadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
+/* Staggered fade-in for lists */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.55s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  opacity: 0;
+}
+
+.stagger-1 { animation-delay: 0ms; }
+.stagger-2 { animation-delay: 80ms; }
+.stagger-3 { animation-delay: 160ms; }
+.stagger-4 { animation-delay: 240ms; }
+.stagger-5 { animation-delay: 320ms; }
+.stagger-6 { animation-delay: 400ms; }
+
+/* Orange glow pulse for active elements */
 @keyframes pulseGlow {
   0%, 100% {
     box-shadow: 0 0 12px -3px rgba(249, 115, 22, 0.3);
@@ -117,7 +144,17 @@ body {
   animation: pulseGlow 2.5s infinite ease-in-out;
 }
 
-/* Interactive card hover */
+/* Subtle border shimmer effect for gradient border panels */
+@keyframes borderShimmer {
+  0%, 100% { border-color: rgba(249, 115, 22, 0.15); }
+  50% { border-color: rgba(249, 115, 22, 0.35); }
+}
+
+.animate-border-shimmer {
+  animation: borderShimmer 3s ease-in-out infinite;
+}
+
+/* Interactive card hover effect */
 .interactive-card {
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -125,4 +162,125 @@ body {
   transform: translateY(-2px) scale(1.01);
   border-color: rgba(249, 115, 22, 0.3) !important;
   box-shadow: 0 12px 24px -10px rgba(249, 115, 22, 0.2);
-}
+}
+
+/* Feature card hover - used in landing page */
+.feature-card {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.feature-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(249, 115, 22, 0.03), transparent 60%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.feature-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(249, 115, 22, 0.15) !important;
+  box-shadow: 0 16px 32px -12px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(249, 115, 22, 0.1);
+}
+
+.feature-card:hover::before {
+  opacity: 1;
+}
+
+/* Metric card number pop animation */
+@keyframes numberPop {
+  0% { transform: scale(0.85); opacity: 0; }
+  70% { transform: scale(1.05); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.animate-number-pop {
+  animation: numberPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* Floating background orb animation */
+@keyframes floatOrb {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(20px, -15px) scale(1.02); }
+  66% { transform: translate(-10px, 10px) scale(0.98); }
+}
+
+.animate-float-orb {
+  animation: floatOrb 12s ease-in-out infinite;
+}
+
+/* Hero badge shimmer */
+@keyframes badgeShimmer {
+  0%, 100% { background-color: rgba(124, 45, 18, 0.4); }
+  50% { background-color: rgba(154, 52, 18, 0.6); }
+}
+
+.animate-badge-shimmer {
+  animation: badgeShimmer 2.5s ease-in-out infinite;
+}
+
+/* Slide-in from left for sidebar */
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-slide-in-left {
+  animation: slideInLeft 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Gradient text animation */
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.animate-gradient-text {
+  background-size: 200% 200%;
+  animation: gradientShift 4s ease infinite;
+}
+
+/* Vehicle item hover in sidebar */
+.vehicle-item {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
+
+.vehicle-item::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 2px;
+  height: 0;
+  background: linear-gradient(to bottom, #f97316, #f59e0b);
+  border-radius: 0 2px 2px 0;
+  transition: height 0.2s ease;
+}
+
+.vehicle-item:hover::after,
+.vehicle-item.active::after {
+  height: 65%;
+}
+
+/* Typing cursor blink */
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+.animate-blink {
+  animation: blink 1s step-end infinite;
+}
