@@ -3,174 +3,297 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Epicure - Hyper-Custom AI Gastronomy Planner</title>
-  <!-- Google Fonts: Syncopate & Syne -->
+  <title>Epicure AI - Quantum Gastronomy & Task Orchestrator</title>
+  <!-- Typography imports -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Syncopate:wght@700&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <!-- Lucide Icons CDN -->
   <script src="https://unpkg.com/lucide@latest"></script>
-  <!-- Custom CSS stylesheet -->
+  <!-- Main CSS Sheet -->
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <!-- Dynamic Background Glow Elements -->
-  <div class="glow-sphere glow-1"></div>
-  <div class="glow-sphere glow-2"></div>
+  <!-- Ambient background lighting grids -->
+  <div class="quantum-glow-1"></div>
+  <div class="quantum-glow-2"></div>
+  <div class="grid-overlay"></div>
 
-  <!-- Main Container -->
-  <main class="app-container">
-    <header class="app-header">
-      <div class="logo-area">
-        <i data-lucide="compass" class="logo-icon"></i>
-        <h1>Epicure</h1>
+  <!-- Unified Layout -->
+  <div class="epicure-root">
+    
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar-nav">
+      <div class="sidebar-header">
+        <i data-lucide="compass" class="nav-logo-icon"></i>
+        <span class="nav-logo-text">Epicure</span>
       </div>
-      <p class="tagline">Personalized AI Gastronomical Task Planner</p>
-    </header>
-
-    <!-- App Grid -->
-    <div class="app-grid">
-      <!-- Input Panel (Left Side) -->
-      <section class="glass-card control-panel">
-        <div class="panel-header">
-          <i data-lucide="sliders-horizontal" class="panel-icon"></i>
-          <h2>Planner Configuration</h2>
+      <nav class="nav-links">
+        <a href="#dashboard" class="nav-link active" data-tab="navDash">
+          <i data-lucide="layout-dashboard" class="nav-icon"></i>
+          <span>Orchestrator</span>
+        </a>
+        <a href="#simulation" class="nav-link" data-tab="navSim">
+          <i data-lucide="video" class="nav-icon"></i>
+          <span>Sim Console</span>
+        </a>
+        <a href="#billing" class="nav-link" data-tab="navBill">
+          <i data-lucide="zap" class="nav-icon"></i>
+          <span>Premium</span>
+        </a>
+      </nav>
+      <!-- User Profile Slot -->
+      <div class="user-profile-slot">
+        <div class="avatar">AK</div>
+        <div class="user-meta">
+          <div class="user-name">Avanish Kasar</div>
+          <div class="user-badge">Free Tier</div>
         </div>
+      </div>
+    </aside>
 
-        <form id="plannerForm" class="config-form" novalidate>
-          <!-- Context Input -->
-          <div class="form-group">
-            <label for="userContext">What does your day look like?</label>
-            <textarea id="userContext" rows="3" placeholder="e.g., Working late today, need fast high-protein meals. Cooking for 2 people." required></textarea>
-            <span class="error-msg" id="contextError">Please enter a description of your day.</span>
-          </div>
-
-          <!-- Budget Input -->
-          <div class="form-group">
-            <label for="budgetLimit">Total Day Budget (INR)</label>
-            <div class="input-with-icon">
-              <span class="input-currency">₹</span>
-              <input type="number" id="budgetLimit" placeholder="e.g., 500" min="50" required>
-            </div>
-            <span class="error-msg" id="budgetError">Please enter a valid budget of at least ₹50.</span>
-          </div>
-
-          <button type="submit" class="btn-primary" id="btnGenerate">
-            <span class="btn-text">Generate AI Culinary Plan</span>
-            <i data-lucide="sparkles" class="btn-icon"></i>
+    <!-- Main Workspace -->
+    <div class="workspace-viewport">
+      
+      <!-- Top Utility Header -->
+      <header class="workspace-header">
+        <div class="header-left">
+          <h2>Quantum Dashboard</h2>
+          <p class="breadcrumbs">Home / Orchestrator</p>
+        </div>
+        <div class="header-right">
+          <button class="upgrade-btn-pill" id="headerUpgradeBtn">
+            <i data-lucide="crown"></i>
+            <span>Go Premium</span>
           </button>
-        </form>
-
-        <!-- API Mock Switch (for testing purposes) -->
-        <div class="mock-switch-container">
-          <label class="switch">
-            <input type="checkbox" id="mockMode" checked>
-            <span class="slider"></span>
-          </label>
-          <span class="switch-label">Offline Simulation Mode</span>
         </div>
-      </section>
+      </header>
 
-      <!-- Output Dashboard (Right Side) -->
-      <section class="dashboard-panel">
-        <!-- Loader / Welcome State -->
-        <div id="welcomeState" class="glass-card state-card active">
-          <i data-lucide="cooking-pot" class="state-icon pulse"></i>
-          <h3>Ready for Selection</h3>
-          <p>Provide details of your day and budget limit to generate your personalized AI meal structure and cooking checklist.</p>
-        </div>
+      <!-- Dynamic Content Viewports -->
+      <main class="viewport-content">
 
-        <div id="loaderState" class="glass-card state-card">
-          <div class="spinner"></div>
-          <h3>Consulting AeroChef Intelligence...</h3>
-          <p>Building custom meal blueprints, checking resource budgets, and cataloging sub-tasks.</p>
-        </div>
+        <!-- VIEWPORT 1: ORCHESTRATOR DASHBOARD -->
+        <div class="view-pane active" id="paneDash">
+          <div class="orchestrator-layout">
+            
+            <!-- Left Side: Config -->
+            <section class="glass-card config-sidebar">
+              <div class="card-header">
+                <i data-lucide="sliders-horizontal" class="header-icon"></i>
+                <h3>Plan Configuration</h3>
+              </div>
+              <form id="plannerForm" class="config-form" novalidate>
+                <div class="form-group">
+                  <label for="userContext">Define your day & dietary preferences</label>
+                  <textarea id="userContext" rows="4" placeholder="e.g., Heavy meetings until 6pm. Need high protein keto-friendly dinner. Serving 2." required></textarea>
+                  <span class="error-msg" id="contextError">This field is mandatory.</span>
+                </div>
+                <div class="form-group">
+                  <label for="budgetLimit">Spending Cap (INR)</label>
+                  <div class="input-with-icon">
+                    <span class="currency-symbol">₹</span>
+                    <input type="number" id="budgetLimit" placeholder="e.g., 500" min="50" required>
+                  </div>
+                  <span class="error-msg" id="budgetError">Minimum limit is ₹50.</span>
+                </div>
+                <button type="submit" class="btn-action-primary" id="btnGenerate">
+                  <span>Generate Culinary Matrix</span>
+                  <i data-lucide="sparkles"></i>
+                </button>
+              </form>
 
-        <!-- Main Workspace Tabs -->
-        <div id="workspaceState" class="workspace-wrapper">
-          <!-- Tab Headers -->
-          <div class="tabs-header">
-            <button class="tab-btn active" data-target="tabMeals">
-              <i data-lucide="utensils" class="tab-icon"></i>
-              <span>Meal Blueprint</span>
-            </button>
-            <button class="tab-btn" data-target="tabTasks">
-              <i data-lucide="check-square" class="tab-icon"></i>
-              <span>Cooking Tasks</span>
-            </button>
-            <button class="tab-btn" data-target="tabGrocery">
-              <i data-lucide="shopping-basket" class="tab-icon"></i>
-              <span>Grocery List</span>
-            </button>
-          </div>
+              <!-- Dev Control Switch -->
+              <div class="dev-switch-card">
+                <div class="switch-row">
+                  <span class="switch-label">Offline Mocking Protocol</span>
+                  <label class="switch">
+                    <input type="checkbox" id="mockMode" checked>
+                    <span class="slider"></span>
+                  </label>
+                </div>
+              </div>
+            </section>
 
-          <!-- Tab Content Cards -->
-          <div class="tabs-body">
-            <!-- Tab 1: Meal Plan & Budget Verification -->
-            <div class="tab-pane active" id="tabMeals">
-              <!-- Budget Alert Banner -->
-              <div class="budget-banner" id="budgetBanner">
-                <i id="budgetBannerIcon" data-lucide="check-circle" class="banner-icon"></i>
-                <div class="banner-details">
-                  <h4 id="budgetBannerTitle">Budget Check: Feasible</h4>
-                  <p id="budgetBannerDesc">Estimated total cost is within your boundary limit.</p>
+            <!-- Right Side: Outputs -->
+            <section class="results-viewport">
+              
+              <!-- Blank State -->
+              <div id="welcomeState" class="glass-card state-display active">
+                <i data-lucide="atom" class="state-icon float-anim"></i>
+                <h3>Awaiting Matrix Parameters</h3>
+                <p>Configure your day's schedule and budget bounds on the left panel to execute the Epicure synthesis engine.</p>
+              </div>
+
+              <!-- Loading State -->
+              <div id="loaderState" class="glass-card state-display">
+                <div class="matrix-loader"></div>
+                <h3>Sifting Culinary Databases...</h3>
+                <p>Synthesizing meal structures, running budget feasibility constraints, and drafting micro-checklists.</p>
+              </div>
+
+              <!-- Rendered State Wrapper -->
+              <div id="workspaceState" class="workspace-output-wrapper">
+                <!-- Inner Nav Tab Buttons -->
+                <div class="workspace-tabs">
+                  <button class="w-tab-btn active" data-target="wMeals">
+                    <i data-lucide="salad"></i> Meal Matrix
+                  </button>
+                  <button class="w-tab-btn" data-target="wTasks">
+                    <i data-lucide="check-square"></i> Preparation Tasks
+                  </button>
+                  <button class="w-tab-btn" data-target="wIngredients">
+                    <i data-lucide="shopping-basket"></i> Ingredient Catalog
+                  </button>
+                </div>
+
+                <!-- Tab Panes Content -->
+                <div class="workspace-tab-bodies">
+                  
+                  <!-- Tab: Meals -->
+                  <div class="w-tab-pane active" id="wMeals">
+                    <div class="budget-analytics-card" id="budgetBanner">
+                      <i id="budgetBannerIcon" data-lucide="shield-check"></i>
+                      <div class="banner-text">
+                        <h4 id="budgetBannerTitle">Budget Check Complete</h4>
+                        <p id="budgetBannerDesc">Plan fits within your specified bounds.</p>
+                      </div>
+                    </div>
+                    <div class="meals-grid" id="mealsGrid"></div>
+                  </div>
+
+                  <!-- Tab: Tasks -->
+                  <div class="w-tab-pane" id="wTasks">
+                    <div class="checklist-card glass-card">
+                      <div class="checklist-header">
+                        <h4>Preparation Roadmap</h4>
+                        <p>Check off milestones as you finalize recipes</p>
+                      </div>
+                      <ul class="task-checklist" id="taskList"></ul>
+                    </div>
+                  </div>
+
+                  <!-- Tab: Ingredients & Substitutions -->
+                  <div class="w-tab-pane" id="wIngredients">
+                    <div class="ingredients-split-view">
+                      <div class="ingredients-card glass-card">
+                        <h4>Raw Checklist</h4>
+                        <ul class="ingredient-items-list" id="groceryList"></ul>
+                      </div>
+                      <div class="substitutions-card glass-card">
+                        <h4>Replacement Matrix</h4>
+                        <ul class="substitutions-items-list" id="substitutionList"></ul>
+                      </div>
+                    </div>
+                  </div>
+
                 </div>
               </div>
 
-              <div class="meals-grid" id="mealsGrid">
-                <!-- Breakfast, Lunch, Dinner dynamic cards -->
+            </section>
+
+          </div>
+        </div>
+
+        <!-- VIEWPORT 2: SIMULATION CONSOLE -->
+        <div class="view-pane" id="paneSim">
+          <div class="simulation-dashboard">
+            <div class="simulation-video-card glass-card">
+              <div class="sim-header">
+                <i data-lucide="terminal" class="sim-icon"></i>
+                <h3>Culinary Integration Simulation</h3>
+              </div>
+              <div class="video-container-wrapper">
+                <!-- Mock Video / Visual Simulation Canvas -->
+                <div class="mock-video-canvas" id="videoCanvas">
+                  <div class="video-overlay-play" id="playBtnOverlay">
+                    <i data-lucide="play-circle"></i>
+                    <span>Initialize Simulation Walkthrough</span>
+                  </div>
+                  <video id="simVideo" width="100%" height="100%" loop muted>
+                    <source src="C:/Users/avani/Downloads/Avanish Kasar 3.01.mp4" type="video/mp4">
+                    Your browser does not support local video execution.
+                  </video>
+                  <!-- Simulated Screen Overlay info -->
+                  <div class="video-telemetry" id="videoTelemetry">
+                    <span class="badge-red">SIM LIVE</span>
+                    <span class="telemetry-timer" id="telemetryTimer">00:00:00</span>
+                  </div>
+                </div>
+              </div>
+              <div class="simulation-controls">
+                <button class="btn-control" id="btnPlayPause"><i data-lucide="play"></i> Play</button>
+                <button class="btn-control" id="btnMute"><i data-lucide="volume-2"></i> Mute</button>
+                <button class="btn-control" id="btnReset"><i data-lucide="rotate-ccw"></i> Restart</button>
               </div>
             </div>
 
-            <!-- Tab 2: Cooking To-Do List -->
-            <div class="tab-pane" id="tabTasks">
-              <div class="tasks-wrapper glass-card">
-                <div class="pane-header">
-                  <h3>Prep & Cooking Checklist</h3>
-                  <p>Check off items as you complete your cooking workflow</p>
+            <!-- Simulation Manual Instructions -->
+            <div class="simulation-docs-card glass-card">
+              <h4>System Integration Manual</h4>
+              <p>Observe how Epicure's automated scheduling pipelines organize food parameters and query models on the fly.</p>
+              <div class="docs-steps">
+                <div class="step-row">
+                  <span class="step-num">01</span>
+                  <p>Configure parameters such as context constraints and currency limits in the orchestrator.</p>
                 </div>
-                <ul class="task-list" id="taskList">
-                  <!-- Interactive Tasks -->
+                <div class="step-row">
+                  <span class="step-num">02</span>
+                  <p>Check the simulated execution loop showing RAG pipeline retrievals of ingredient costs.</p>
+                </div>
+                <div class="step-row">
+                  <span class="step-num">03</span>
+                  <p>Toggle simulated items to verify budget metrics dynamically adjust.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- VIEWPORT 3: PREMIUM MODULE -->
+        <div class="view-pane" id="paneBill">
+          <div class="premium-showcase">
+            <div class="premium-hero">
+              <i data-lucide="sparkles" class="hero-spark"></i>
+              <h2>Unlock Hyper-Gourmet Epicure Pro</h2>
+              <p>Experience real-time external model integrations, Razorpay payment processing gateways, and vector DB caching.</p>
+            </div>
+
+            <div class="tiers-row">
+              <!-- Free Tier -->
+              <div class="tier-card glass-card">
+                <span class="tier-badge-label">Active</span>
+                <h3>Starter Protocol</h3>
+                <div class="tier-price">₹0<span>/ forever</span></div>
+                <ul class="tier-features">
+                  <li><i data-lucide="check"></i> Standard meal schedule mapping</li>
+                  <li><i data-lucide="check"></i> Local local database validation</li>
+                  <li><i data-lucide="check"></i> Offline mocking protocol</li>
                 </ul>
+                <button class="btn-tier-action" disabled>Current Protocol</button>
               </div>
-            </div>
 
-            <!-- Tab 3: Grocery & Substitutions -->
-            <div class="tab-pane" id="tabGrocery">
-              <div class="grocery-grid">
-                <!-- Left: Grocery Items -->
-                <div class="grocery-left glass-card">
-                  <div class="pane-header">
-                    <h3>Ingredients Needed</h3>
-                    <p>Required items to buy or gather</p>
-                  </div>
-                  <ul class="grocery-list" id="groceryList">
-                    <!-- Dynamic Grocery Items -->
-                  </ul>
-                </div>
-                <!-- Right: Quick Smart Substitutions -->
-                <div class="grocery-right glass-card">
-                  <div class="pane-header">
-                    <h3>Smart Substitutions</h3>
-                    <p>Alternative ingredients to handle missing items</p>
-                  </div>
-                  <ul class="substitution-list" id="substitutionList">
-                    <!-- Dynamic Substitutions -->
-                  </ul>
-                </div>
+              <!-- Premium Tier -->
+              <div class="tier-card glass-card premium-tier-card">
+                <span class="tier-badge-label gold">Popular</span>
+                <h3>Epicure Elite</h3>
+                <div class="tier-price">₹299<span>/ month</span></div>
+                <ul class="tier-features">
+                  <li><i data-lucide="check"></i> Vector DB (Qdrant Cloud) caching pipelines</li>
+                  <li><i data-lucide="check"></i> Razorpay sandbox payment gateways</li>
+                  <li><i data-lucide="check"></i> Complete Slack message report automation</li>
+                  <li><i data-lucide="check"></i> Dynamic real-time Firecrawl harvests</li>
+                </ul>
+                <button class="btn-tier-action active" id="btnCheckoutPremium">Activate Protocol</button>
               </div>
             </div>
           </div>
         </div>
-      </section>
+
+      </main>
     </div>
-  </main>
+  </div>
 
-  <footer class="app-footer">
-    <p>&copy; 2026 Epicure. Engineered using Google Antigravity & AI Studio.</p>
-  </footer>
-
-  <!-- Application script -->
+  <!-- External integration script -->
   <script src="app.js"></script>
 </body>
 </html>

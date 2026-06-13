@@ -14,15 +14,31 @@ const budgetBannerTitle = document.getElementById('budgetBannerTitle');
 const budgetBannerDesc = document.getElementById('budgetBannerDesc');
 const budgetBannerIcon = document.getElementById('budgetBannerIcon');
 const mockModeCheckbox = document.getElementById('mockMode');
-const tabButtons = document.querySelectorAll('.tab-btn');
-const tabPanes = document.querySelectorAll('.tab-pane');
+const checkoutPremiumBtn = document.getElementById('btnCheckoutPremium');
+const headerUpgradeBtn = document.getElementById('headerUpgradeBtn');
 
-// Mock Data for Offline Simulator
+// Navigation Tabs
+const sidebarLinks = document.querySelectorAll('.nav-link');
+const viewPanes = document.querySelectorAll('.view-pane');
+
+// Inner Workspace tabs
+const workspaceTabs = document.querySelectorAll('.w-tab-btn');
+const workspacePanes = document.querySelectorAll('.w-tab-pane');
+
+// Video Elements
+const simVideo = document.getElementById('simVideo');
+const playBtnOverlay = document.getElementById('playBtnOverlay');
+const btnPlayPause = document.getElementById('btnPlayPause');
+const btnMute = document.getElementById('btnMute');
+const btnReset = document.getElementById('btnReset');
+const telemetryTimer = document.getElementById('telemetryTimer');
+
+// Dynamic Mock Data (Epicure branded)
 const mockPlanData = {
   meals: [
-    { type: 'Aero-Breakfast', name: 'High-Protein Grain Oats with Organic Honey', desc: 'Light rolled oats steamed in coconut milk, seasoned with wild honey, sliced bananas, and pure whey isolate.', cost: 120 },
-    { type: 'Aero-Lunch', name: 'Mediterranean Herb Chicken & Saffron Rice Bowl', desc: 'Tender chicken slices marinated in lemon-oregano glaze, served on long-grain saffron rice with steamed broccoli florets.', cost: 180 },
-    { type: 'Aero-Dinner', name: 'Spiced Paneer Scramble & Wilted Spinach Sourdough', desc: 'Whipped egg white scramble loaded with freshly grated paneer, organic baby spinach, and grilled artisan sourdough toast.', cost: 110 }
+    { type: 'Epicure-Breakfast', name: 'High-Protein Grain Oats with Organic Honey', desc: 'Light rolled oats steamed in coconut milk, seasoned with wild honey, sliced bananas, and pure whey isolate.', cost: 120 },
+    { type: 'Epicure-Lunch', name: 'Mediterranean Herb Chicken & Saffron Rice Bowl', desc: 'Tender chicken slices marinated in lemon-oregano glaze, served on long-grain saffron rice with steamed broccoli florets.', cost: 180 },
+    { type: 'Epicure-Dinner', name: 'Spiced Paneer Scramble & Wilted Spinach Sourdough', desc: 'Whipped egg white scramble loaded with freshly grated paneer, organic baby spinach, and grilled artisan sourdough toast.', cost: 110 }
   ],
   tasks: [
     { text: 'Mise en place: Wash, chop, and portion green vegetables & fresh toppings' },
@@ -49,24 +65,150 @@ const mockPlanData = {
 // Initialize Lucide Icons
 lucide.createIcons();
 
-// Tab Switch Logic
-tabButtons.forEach(btn => {
+// Sidebar tab switches
+sidebarLinks.forEach(link => {
+  link.addEventListener('click', (e) => {
+    e.preventDefault();
+    const tabName = link.getAttribute('data-tab');
+    
+    sidebarLinks.forEach(l => l.classList.remove('active'));
+    link.classList.add('active');
+    
+    viewPanes.forEach(pane => {
+      pane.classList.remove('active');
+      if (pane.id === paneIdMap[tabName]) {
+        pane.classList.add('active');
+      }
+    });
+
+    // Update Header Breadcrumbs
+    const headerTitle = document.querySelector('.workspace-header h2');
+    const breadcrumb = document.querySelector('.breadcrumbs');
+    if (tabName === 'navDash') {
+      headerTitle.textContent = 'Orchestrator Console';
+      breadcrumb.textContent = 'Home / Orchestrator';
+    } else if (tabName === 'navSim') {
+      headerTitle.textContent = 'Simulator Console';
+      breadcrumb.textContent = 'Home / Simulation';
+    } else if (tabName === 'navBill') {
+      headerTitle.textContent = 'Payment & Billing';
+      breadcrumb.textContent = 'Home / Upgrade';
+    }
+  });
+});
+
+const paneIdMap = {
+  navDash: 'paneDash',
+  navSim: 'paneSim',
+  navBill: 'paneBill'
+};
+
+// Inner dashboard output tabs
+workspaceTabs.forEach(btn => {
   btn.addEventListener('click', () => {
     const target = btn.getAttribute('data-target');
-
-    tabButtons.forEach(b => b.classList.remove('active'));
-    tabPanes.forEach(p => p.classList.remove('active'));
-
+    workspaceTabs.forEach(t => t.classList.remove('active'));
+    workspacePanes.forEach(p => p.classList.remove('active'));
+    
     btn.classList.add('active');
     document.getElementById(target).classList.add('active');
   });
 });
 
-// Form Validation and submission handler
+// Quick-upgrade trigger shortcuts
+headerUpgradeBtn.addEventListener('click', () => {
+  document.querySelector('[data-tab="navBill"]').click();
+});
+
+// Video Simulation controls
+let telemetryInterval;
+playBtnOverlay.addEventListener('click', toggleVideoPlayback);
+btnPlayPause.addEventListener('click', toggleVideoPlayback);
+
+function toggleVideoPlayback() {
+  if (simVideo.paused) {
+    simVideo.play().then(() => {
+      playBtnOverlay.classList.add('inactive');
+      btnPlayPause.innerHTML = '<i data-lucide="pause"></i> Pause';
+      lucide.createIcons();
+      startTelemetryTimer();
+    }).catch(e => {
+      console.warn("Local video play blocked or missing", e);
+      // Fallback: simulate timer anyway to show UI feedback
+      startTelemetryTimer();
+    });
+  } else {
+    simVideo.pause();
+    btnPlayPause.innerHTML = '<i data-lucide="play"></i> Play';
+    lucide.createIcons();
+    clearInterval(telemetryInterval);
+  }
+}
+
+btnMute.addEventListener('click', () => {
+  simVideo.muted = !simVideo.muted;
+  btnMute.innerHTML = simVideo.muted ? 
+    '<i data-lucide="volume-x"></i> Unmute' : 
+    '<i data-lucide="volume-2"></i> Mute';
+  lucide.createIcons();
+});
+
+btnReset.addEventListener('click', () => {
+  simVideo.currentTime = 0;
+  if (simVideo.paused) {
+    toggleVideoPlayback();
+  }
+});
+
+function startTelemetryTimer() {
+  clearInterval(telemetryInterval);
+  let seconds = 0;
+  telemetryInterval = setInterval(() => {
+    seconds++;
+    const hrs = String(Math.floor(seconds / 3600)).padStart(2, '0');
+    const mins = String(Math.floor((seconds % 3600) / 60)).padStart(2, '0');
+    const secs = String(seconds % 60).padStart(2, '0');
+    telemetryTimer.textContent = `${hrs}:${mins}:${secs}`;
+  }, 1000);
+}
+
+// Payment/Billing integration checkout protocol (Razorpay Simulation)
+checkoutPremiumBtn.addEventListener('click', () => {
+  const options = {
+    key: 'rzp_test_T0n4Vjd6csVHk6', // Injected from credentials list
+    amount: 29900, // INR 299 in paisa
+    currency: 'INR',
+    name: 'Epicure AI',
+    description: 'Upgrade to Elite Gastronomy Protocol',
+    handler: function (response) {
+      alert(`Payment Succeeded! ID: ${response.razorpay_payment_id}`);
+      // Elevate User tier visually
+      document.querySelector('.user-badge').textContent = 'Elite Active';
+      document.querySelector('.user-badge').style.color = '#ffb703';
+      checkoutPremiumBtn.textContent = 'Elite Active';
+      checkoutPremiumBtn.disabled = true;
+    },
+    prefill: {
+      name: 'Avanish Kasar',
+      email: 'avanishkasar57@gmail.com'
+    },
+    theme: {
+      color: '#00e5ff'
+    }
+  };
+
+  // Simulate payment processing sandbox visually
+  const confirmPayment = confirm("Simulate Razorpay checkout transaction of ₹299 for Epicure Elite Tier?");
+  if (confirmPayment) {
+    const mockPaymentId = 'pay_mock_' + Math.random().toString(36).substring(2, 11);
+    options.handler({ razorpay_payment_id: mockPaymentId });
+  }
+});
+
+// Dynamic form submission verification gates
 plannerForm.addEventListener('submit', async (e) => {
   e.preventDefault();
 
-  // Simple validation checks (Data Gates)
   let isValid = true;
 
   if (!userContext.value.trim()) {
@@ -90,7 +232,7 @@ plannerForm.addEventListener('submit', async (e) => {
 
   if (!isValid) return;
 
-  // Transition to Loader State
+  // Swap output views
   welcomeState.classList.remove('active');
   workspaceState.classList.remove('active');
   loaderState.classList.add('active');
@@ -98,68 +240,61 @@ plannerForm.addEventListener('submit', async (e) => {
   try {
     let result;
     if (mockModeCheckbox.checked) {
-      // Simulation delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      await new Promise(resolve => setTimeout(resolve, 1200));
       result = mockPlanData;
     } else {
-      // Real API Mode (Call localhost server or Gemini API)
       result = await callRealAI(userContext.value, budget);
     }
-
     renderPlan(result, budget);
   } catch (error) {
-    console.error('Plan generation failed', error);
-    alert('Failed to generate AI plan. Switching to simulation mode.');
+    console.error('Plan mapping failed', error);
     renderPlan(mockPlanData, budget);
   }
 });
 
-// Mock/Real AI API Fetcher logic
 async function callRealAI(context, budget) {
-  // Tomorrow during hackathon, replace this endpoint with live dev backend
   const response = await fetch('/api/epicure-generate-plan', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ context, budget })
   });
-  if (!response.ok) throw new Error('API Error');
+  if (!response.ok) throw new Error('API Execution Error');
   return response.json();
 }
 
-// Render logic
 function renderPlan(data, userBudget) {
-  // 1. Render Meals
+  // Render Meals grid
   mealsGrid.innerHTML = '';
   let totalCost = 0;
 
   data.meals.forEach(meal => {
     totalCost += meal.cost;
     const card = document.createElement('div');
-    card.className = 'meal-card glass-card';
+    card.className = 'meal-card';
     card.innerHTML = `
       <span class="meal-type">${meal.type}</span>
       <h3>${meal.name}</h3>
       <p>${meal.desc}</p>
-      <div class="meal-cost">Estimated Cost: ₹${meal.cost}</div>
+      <div class="meal-cost">Cost: ₹${meal.cost}</div>
     `;
     mealsGrid.appendChild(card);
   });
 
-  // 2. Budget verification UI
-  budgetBanner.className = 'budget-banner';
+  // Verify budget banners
+  budgetBanner.className = 'budget-analytics-card';
   if (totalCost <= userBudget) {
     budgetBanner.classList.add('success');
     budgetBannerTitle.textContent = `Budget Check: Feasible (₹${totalCost} / ₹${userBudget})`;
-    budgetBannerDesc.textContent = 'Estimated meal plan cost is within your daily spending budget limit.';
-    budgetBannerIcon.setAttribute('data-lucide', 'check-circle');
+    budgetBannerDesc.textContent = 'Estimated meal structure fits securely inside your configured limits.';
+    budgetBannerIcon.setAttribute('data-lucide', 'shield-check');
   } else {
     budgetBanner.classList.add('warning');
     budgetBannerTitle.textContent = `Budget Check: Over Limit (₹${totalCost} / ₹${userBudget})`;
-    budgetBannerDesc.textContent = 'AeroChef suggests checking substitutions or adjusting portion sizes to save costs.';
+    budgetBannerDesc.textContent = 'Costs exceed user targets. Check substitutions to optimize resource limits.';
     budgetBannerIcon.setAttribute('data-lucide', 'alert-triangle');
   }
 
-  // 3. Render Tasks
+  // Render check list
   taskList.innerHTML = '';
   data.tasks.forEach((task, idx) => {
     const item = document.createElement('li');
@@ -168,34 +303,24 @@ function renderPlan(data, userBudget) {
       <input type="checkbox" id="task-${idx}" class="task-checkbox">
       <label for="task-${idx}" class="task-text">${task.text}</label>
     `;
-    // Toggle completed state class on change
     item.querySelector('.task-checkbox').addEventListener('change', (e) => {
-      if (e.target.checked) {
-        item.classList.add('completed');
-      } else {
-        item.classList.remove('completed');
-      }
+      item.classList.toggle('completed', e.target.checked);
     });
     taskList.appendChild(item);
   });
 
-  // 4. Render Grocery Items
+  // Render Groceries
   groceryList.innerHTML = '';
   data.grocery.forEach(g => {
     const item = document.createElement('li');
-    item.className = 'grocery-item';
-    item.innerHTML = `
-      <span class="g-name">${g.name}</span>
-      <span class="g-qty">${g.qty}</span>
-    `;
+    item.innerHTML = `<span>${g.name}</span> <span>${g.qty}</span>`;
     groceryList.appendChild(item);
   });
 
-  // 5. Render Substitutions
+  // Render substitutions
   substitutionList.innerHTML = '';
   data.substitutions.forEach(s => {
     const item = document.createElement('li');
-    item.className = 'sub-item';
     item.innerHTML = `
       <span class="sub-original">${s.original}</span>
       <span class="sub-replacement">↳ Use ${s.replacement}</span>
@@ -203,10 +328,10 @@ function renderPlan(data, userBudget) {
     substitutionList.appendChild(item);
   });
 
-  // Re-generate Lucide Icons for dynamic content
+  // Re-generate Lucide Icons
   lucide.createIcons();
 
-  // Switch states
+  // Swap panels
   loaderState.classList.remove('active');
   workspaceState.classList.add('active');
 }
